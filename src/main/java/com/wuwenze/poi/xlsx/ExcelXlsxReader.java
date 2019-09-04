@@ -46,10 +46,7 @@ import org.xml.sax.helpers.XMLReaderFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Date;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author wuwenze
@@ -70,6 +67,8 @@ public class ExcelXlsxReader extends DefaultHandler {
   private final ExcelReadHandler mExcelReadHandler;
   private final Class<? extends Object> mEntityClass;
   private final List<Object> mExcelRowObjectData = Lists.newArrayList();
+  private final List<String> headTitleList = Lists.newArrayList();
+  private final Map<String,ExcelProperty> excelPropertyMap = new HashMap<String, ExcelProperty>();
   private Integer mBeginReadRowIndex = Const.XLSX_DEFAULT_BEGIN_READ_ROW_INDEX;
   private final Object mEmptyCellValue = Const.XLSX_DEFAULT_EMPTY_CELL_VALUE;
 
@@ -328,20 +327,24 @@ public class ExcelXlsxReader extends DefaultHandler {
   private final static String CHECK_MAP_KEY_OF_ERROR = "CELL_ERROR";
 
   private void performVerificationAndProcessFlowRow() throws Exception {
-    if (mCurrentRowIndex >= mBeginReadRowIndex) {
-      List<ExcelProperty> propertyList = mExcelMapping.getPropertyList();
-      Integer excelRowDataSize = mExcelRowObjectData.size();
-      Integer excelMappingPropertySize = propertyList.size();
-      // 空值补齐(前)
-      for (int i = 0; i < excelMappingPropertySize - excelRowDataSize; i++) {
-        mExcelRowObjectData.add(i, mEmptyCellValue);
+    if(mCurrentRowIndex ==0){
+      for (int i = 0; i < mExcelRowObjectData.size(); i++) {
+        headTitleList.add(i, (String)mExcelRowObjectData.get(i));
       }
-
+      List<ExcelProperty> propertyList = mExcelMapping.getPropertyList();
+      for(ExcelProperty pro:propertyList)
+        excelPropertyMap.put(pro.getColumn(),pro);
+    }
+    if (mCurrentRowIndex >= mBeginReadRowIndex) {
       if (!this.rowObjectDataIsAllEmptyCellValue()) {
         Object entity = mEntityClass.newInstance();
         List<ExcelErrorField> errorFields = Lists.newArrayList();
-        for (int i = 0; i < propertyList.size(); i++) {
-          ExcelProperty property = propertyList.get(i);
+        for (int i = 0; i < headTitleList.size(); i++) {
+          //跳过空数据
+          ExcelProperty property = excelPropertyMap.get(headTitleList.get(i));
+          if(property==null) {
+            continue;
+          }
           Map<String, Object> checkAndConvertPropertyRetMap = this.checkAndConvertProperty(i, property, mExcelRowObjectData.get(i));
           Object errorFieldObject = checkAndConvertPropertyRetMap.get(
               ExcelXlsxReader.CHECK_MAP_KEY_OF_ERROR);
