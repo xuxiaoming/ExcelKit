@@ -62,13 +62,14 @@ public class ExcelXlsxReader extends DefaultHandler {
   private Boolean mNextIsString = false;
   private Short mFormatIndex;
   private String mFormatString;
+  private Boolean errorSheet = false;
 
   private final ExcelMapping mExcelMapping;
   private final ExcelReadHandler mExcelReadHandler;
   private final Class<? extends Object> mEntityClass;
   private final List<Object> mExcelRowObjectData = Lists.newArrayList();
   private final List<String> headTitleList = Lists.newArrayList();
-  private final Map<String,ExcelProperty> excelPropertyMap = new HashMap<String, ExcelProperty>();
+  private final Map<String, ExcelProperty> excelPropertyMap = new HashMap<String, ExcelProperty>();
   private Integer mBeginReadRowIndex = Const.XLSX_DEFAULT_BEGIN_READ_ROW_INDEX;
   private final Object mEmptyCellValue = Const.XLSX_DEFAULT_EMPTY_CELL_VALUE;
 
@@ -76,15 +77,15 @@ public class ExcelXlsxReader extends DefaultHandler {
 
 
   public ExcelXlsxReader(Class<? extends Object> entityClass,//
-      ExcelMapping excelMapping, //
-      ExcelReadHandler excelReadHandler) {
+                         ExcelMapping excelMapping, //
+                         ExcelReadHandler excelReadHandler) {
     this(entityClass, excelMapping, null, excelReadHandler);
   }
 
   public ExcelXlsxReader(Class<? extends Object> entityClass,//
-      ExcelMapping excelMapping, //
-      Integer beginReadRowIndex,//
-      ExcelReadHandler excelReadHandler) {
+                         ExcelMapping excelMapping, //
+                         Integer beginReadRowIndex,//
+                         ExcelReadHandler excelReadHandler) {
     mEntityClass = entityClass;
     mExcelMapping = excelMapping;
     if (null != beginReadRowIndex) {
@@ -328,12 +329,24 @@ public class ExcelXlsxReader extends DefaultHandler {
 
   private void performVerificationAndProcessFlowRow() throws Exception {
     if(mCurrentRowIndex ==0){
+      errorSheet = false;
+      headTitleList.clear(); //先清除后添加
       for (int i = 0; i < mExcelRowObjectData.size(); i++) {
         headTitleList.add(i, (String)mExcelRowObjectData.get(i));
       }
       List<ExcelProperty> propertyList = mExcelMapping.getPropertyList();
-      for(ExcelProperty pro:propertyList)
+      for(ExcelProperty pro:propertyList) {
         excelPropertyMap.put(pro.getColumn(),pro);
+      }
+      for (int i = 0; i < headTitleList.size(); i++) { //匹配是否要导入的sheet
+        ExcelProperty property = excelPropertyMap.get(headTitleList.get(i));
+        if (property == null) {
+          errorSheet = true;
+        }
+      }
+    }
+    if(errorSheet) {
+      return;
     }
     if (mCurrentRowIndex >= mBeginReadRowIndex) {
       if (!this.rowObjectDataIsAllEmptyCellValue()) {
@@ -480,8 +493,8 @@ public class ExcelXlsxReader extends DefaultHandler {
   }
 
   private Map<String, Object> buildCheckAndConvertPropertyRetMap(Integer cellIndex,
-      ExcelProperty property,//
-      Object propertyValue, String validErrorMessage) {
+                                                                 ExcelProperty property,//
+                                                                 Object propertyValue, String validErrorMessage) {
     Map<String, Object> resultMap = Maps.newHashMap();
     resultMap.put(ExcelXlsxReader.CHECK_MAP_KEY_OF_VALUE, propertyValue);
     if (null != validErrorMessage) {

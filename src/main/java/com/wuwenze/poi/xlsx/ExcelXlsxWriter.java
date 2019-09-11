@@ -22,25 +22,16 @@ import com.wuwenze.poi.pojo.ExcelProperty;
 import com.wuwenze.poi.util.DateUtil;
 import com.wuwenze.poi.util.POIUtil;
 import com.wuwenze.poi.util.ValidatorUtil;
+import org.apache.commons.beanutils.BeanUtils;
+import org.apache.poi.hssf.util.HSSFColor;
+import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.xssf.streaming.*;
+import org.apache.poi.xssf.usermodel.XSSFClientAnchor;
+import org.apache.poi.xssf.usermodel.XSSFRichTextString;
+
 import java.text.ParseException;
 import java.util.Date;
 import java.util.List;
-import org.apache.commons.beanutils.BeanUtils;
-import org.apache.poi.hssf.util.HSSFColor;
-import org.apache.poi.ss.usermodel.BorderStyle;
-import org.apache.poi.ss.usermodel.CellStyle;
-import org.apache.poi.ss.usermodel.Comment;
-import org.apache.poi.ss.usermodel.DataFormat;
-import org.apache.poi.ss.usermodel.FillPatternType;
-import org.apache.poi.ss.usermodel.Font;
-import org.apache.poi.ss.usermodel.HorizontalAlignment;
-import org.apache.poi.xssf.streaming.SXSSFCell;
-import org.apache.poi.xssf.streaming.SXSSFDrawing;
-import org.apache.poi.xssf.streaming.SXSSFRow;
-import org.apache.poi.xssf.streaming.SXSSFSheet;
-import org.apache.poi.xssf.streaming.SXSSFWorkbook;
-import org.apache.poi.xssf.usermodel.XSSFClientAnchor;
-import org.apache.poi.xssf.usermodel.XSSFRichTextString;
 
 /**
  * @author wuwenze
@@ -82,6 +73,26 @@ public class ExcelXlsxWriter {
       }
     }
     return workbook;
+  }
+
+  public void generateXlsxWorkbook(SXSSFWorkbook workbook,List<?> data, boolean isTemplate) {
+    List<ExcelProperty> propertyList = mExcelMapping.getPropertyList();
+    double sheetNo = Math.ceil(data.size() / (double) mMaxSheetRecords);
+    for (int index = 0; index <= (sheetNo == 0.0 ? sheetNo : sheetNo - 1); index++) {
+      String sheetName = mExcelMapping.getName() + (index == 0 ? "" : "_" + index);
+      SXSSFSheet sheet = generateXlsxHeader(workbook, propertyList, sheetName, isTemplate);
+      if (null != data && data.size() > 0) {
+        int startNo = index * mMaxSheetRecords;
+        int endNo = Math.min(startNo + mMaxSheetRecords, data.size());
+        for (int i = startNo; i < endNo; i++) {
+          SXSSFRow bodyRow = POIUtil.newSXSSFRow(sheet, i + 1 - startNo);
+          for (int j = 0; j < propertyList.size(); j++) {
+            SXSSFCell cell = POIUtil.newSXSSFCell(bodyRow, j);
+            ExcelXlsxWriter.buildCellValueByExcelProperty(cell, data.get(i), propertyList.get(j));
+          }
+        }
+      }
+    }
   }
 
   private SXSSFSheet generateXlsxHeader(SXSSFWorkbook workbook,

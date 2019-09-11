@@ -23,16 +23,15 @@ import com.wuwenze.poi.util.Const;
 import com.wuwenze.poi.util.POIUtil;
 import com.wuwenze.poi.xlsx.ExcelXlsxReader;
 import com.wuwenze.poi.xlsx.ExcelXlsxWriter;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.net.URLEncoder;
-import java.util.List;
-import javax.servlet.http.HttpServletResponse;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import org.apache.poi.xssf.streaming.SXSSFWorkbook;
+
+import javax.servlet.http.HttpServletResponse;
+import java.io.*;
+import java.net.URLEncoder;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author wuwenze
@@ -68,12 +67,43 @@ public class ExcelKit {
     }
     try {
       ExcelMapping excelMapping = ExcelMappingFactory.get(mClass);
-      ExcelXlsxWriter excelXlsxWriter = new ExcelXlsxWriter(excelMapping,
-          mMaxSheetRecords);
+      ExcelXlsxWriter excelXlsxWriter = new ExcelXlsxWriter(excelMapping, mMaxSheetRecords);
       SXSSFWorkbook workbook = excelXlsxWriter.generateXlsxWorkbook(data, isTemplate);
-      String fileName = isTemplate ? (excelMapping.getName() + "-导入模板.xlsx")
-          : (excelMapping.getName() + "-导出结果.xlsx");
+      String fileName = isTemplate ? (excelMapping.getName() + "-导入模板.xlsx") : (excelMapping.getName() + "-导出结果.xlsx");
       POIUtil.download(workbook, mResponse, URLEncoder.encode(fileName, Const.ENCODING));
+    } catch (Throwable e) {
+      throw new ExcelKitRuntimeException("downXlsx error", e);
+    }
+  }
+  public static ExcelKit $Export(HttpServletResponse response) {
+    return new ExcelKit(response);
+  }
+
+  public static ExcelKit $Export() {
+    return new ExcelKit(ExcelKit.MODE_EXPORT);
+  }
+
+  public ByteArrayOutputStream downXlsxTemplate(Map<Class<?>,List<?>> dataList, boolean isTemplate) {
+    if (!mCurrentOptionMode.equals(ExcelKit.MODE_EXPORT)) {
+      throw new ExcelKitRuntimeException(
+              "请使用com.wuwenze.poi.ExcelKit.$Export(Class<?> clazz, HttpServletResponse response)构造器初始化参数.");
+    }
+    try {
+      SXSSFWorkbook workbook = POIUtil.newSXSSFWorkbook();
+      String fileName = "";
+    for(Map.Entry<Class<?>,List<?>> entry : dataList.entrySet()) {
+      mClass = entry.getKey();
+      List<?>  data = entry.getValue();
+      ExcelMapping excelMapping = ExcelMappingFactory.get(mClass);
+      ExcelXlsxWriter excelXlsxWriter = new ExcelXlsxWriter(excelMapping, mMaxSheetRecords);
+      excelXlsxWriter.generateXlsxWorkbook(workbook,data, isTemplate);
+      if(fileName.equals("") ||fileName.length()==0) { //默认取第一个
+        fileName = isTemplate ? (excelMapping.getName() + "-导入模板.xlsx") : (excelMapping.getName() + "-导出结果.xlsx");
+      }
+    }
+      ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+      workbook.write(outputStream);
+      return outputStream;
     } catch (Throwable e) {
       throw new ExcelKitRuntimeException("downXlsx error", e);
     }
@@ -166,6 +196,17 @@ public class ExcelKit {
   protected ExcelKit(Class<?> clazz, OutputStream outputStream) {
     this(clazz, outputStream, null);
     mCurrentOptionMode = ExcelKit.MODE_BUILD;
+  }
+
+
+  protected ExcelKit(HttpServletResponse response) {
+    this(null, null, response);
+    mCurrentOptionMode = ExcelKit.MODE_EXPORT;
+  }
+
+  protected ExcelKit(String type ) {
+    this(null, null, null);
+    mCurrentOptionMode = type;
   }
 
   protected ExcelKit(Class<?> clazz, HttpServletResponse response) {
