@@ -67,6 +67,7 @@ public class ExcelXlsxWriter {
           SXSSFRow bodyRow = POIUtil.newSXSSFRow(sheet, i + 1 - startNo);
           for (int j = 0; j < propertyList.size(); j++) {
             SXSSFCell cell = POIUtil.newSXSSFCell(bodyRow, j);
+            cell.setCellStyle(mDataCellStyle);
             ExcelXlsxWriter.buildCellValueByExcelProperty(cell, data.get(i), propertyList.get(j));
           }
         }
@@ -88,6 +89,7 @@ public class ExcelXlsxWriter {
           SXSSFRow bodyRow = POIUtil.newSXSSFRow(sheet, i + 1 - startNo);
           for (int j = 0; j < propertyList.size(); j++) {
             SXSSFCell cell = POIUtil.newSXSSFCell(bodyRow, j);
+            cell.setCellStyle(mDataCellStyle);
             ExcelXlsxWriter.buildCellValueByExcelProperty(cell, data.get(i), propertyList.get(j));
           }
         }
@@ -101,7 +103,6 @@ public class ExcelXlsxWriter {
     SXSSFDrawing sxssfDrawing = null;
     SXSSFSheet sheet = POIUtil.newSXSSFSheet(workbook, sheetName);
     SXSSFRow headerRow = POIUtil.newSXSSFRow(sheet, 0);
-
     for (int i = 0; i < propertyList.size(); i++) {
       ExcelProperty property = propertyList.get(i);
       SXSSFCell cell = POIUtil.newSXSSFCell(headerRow, i);
@@ -126,6 +127,7 @@ public class ExcelXlsxWriter {
         }
       }
       cell.setCellStyle(getHeaderCellStyle(workbook));
+      getDataCellStyle(workbook);
       String headerColumnValue = property.getColumn();
       if (isTemplate && null != property.getRequired() && property.getRequired()) {
         headerColumnValue = (headerColumnValue + "[*]");
@@ -176,28 +178,48 @@ public class ExcelXlsxWriter {
   }
 
   private CellStyle mHeaderCellStyle = null;
+  private CellStyle mDataCellStyle = null;
 
 
   public CellStyle getHeaderCellStyle(SXSSFWorkbook wb) {
     if (null == mHeaderCellStyle) {
       mHeaderCellStyle = wb.createCellStyle();
-      Font font = wb.createFont();
-      mHeaderCellStyle.setFillForegroundColor((short) 12);
-      mHeaderCellStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
-      mHeaderCellStyle.setBorderTop(BorderStyle.DOTTED);
-      mHeaderCellStyle.setBorderRight(BorderStyle.DOTTED);
-      mHeaderCellStyle.setBorderBottom(BorderStyle.DOTTED);
-      mHeaderCellStyle.setBorderLeft(BorderStyle.DOTTED);
-      mHeaderCellStyle.setAlignment(HorizontalAlignment.LEFT);// 对齐
-      mHeaderCellStyle.setFillForegroundColor(HSSFColor.GREEN.index);
-      mHeaderCellStyle.setFillBackgroundColor(HSSFColor.GREEN.index);
-      font.setColor(HSSFColor.WHITE.index);
-      // 应用标题字体到标题样式
-      mHeaderCellStyle.setFont(font);
+      mHeaderCellStyle.setAlignment(CellStyle.ALIGN_CENTER);
+      mHeaderCellStyle.setVerticalAlignment(CellStyle.VERTICAL_CENTER);
+      mHeaderCellStyle.setFillForegroundColor(IndexedColors.GREY_40_PERCENT.getIndex());
+      mHeaderCellStyle.setFillPattern(CellStyle.SOLID_FOREGROUND);
+      mHeaderCellStyle.setBorderRight(CellStyle.BORDER_THIN);
+      mHeaderCellStyle.setRightBorderColor(IndexedColors.BLACK.getIndex());
+      Font headerFont = wb.createFont();
+      headerFont.setFontName("宋体");
+      headerFont.setFontHeightInPoints((short) 10);
+      headerFont.setBoldweight(Font.BOLDWEIGHT_BOLD);
+      headerFont.setColor(IndexedColors.WHITE.getIndex());
+      mHeaderCellStyle.setFont(headerFont);
       //设置单元格文本形式
       DataFormat dataFormat = wb.createDataFormat();
       mHeaderCellStyle.setDataFormat(dataFormat.getFormat("@"));
     }
     return mHeaderCellStyle;
+  }
+
+  public CellStyle getDataCellStyle(SXSSFWorkbook wb) {
+    if(mDataCellStyle == null) {
+      mDataCellStyle = wb.createCellStyle();
+      mDataCellStyle.setVerticalAlignment(CellStyle.VERTICAL_CENTER);
+      mDataCellStyle.setBorderRight(CellStyle.BORDER_THIN);
+      mDataCellStyle.setRightBorderColor(IndexedColors.BLACK.getIndex());
+      mDataCellStyle.setBorderLeft(CellStyle.BORDER_THIN);
+      mDataCellStyle.setLeftBorderColor(IndexedColors.BLACK.getIndex());
+      mDataCellStyle.setBorderTop(CellStyle.BORDER_THIN);
+      mDataCellStyle.setTopBorderColor(IndexedColors.BLACK.getIndex());
+      mDataCellStyle.setBorderBottom(CellStyle.BORDER_THIN);
+      mDataCellStyle.setBottomBorderColor(IndexedColors.BLACK.getIndex());
+      Font dataFont = wb.createFont();
+      dataFont.setFontName("宋体");
+      dataFont.setFontHeightInPoints((short) 10);
+      mDataCellStyle.setFont(dataFont);
+    }
+      return  mDataCellStyle;
   }
 }
