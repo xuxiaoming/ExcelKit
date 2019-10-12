@@ -292,6 +292,9 @@ public class ExcelXlsxReader extends DefaultHandler {
 
   private String getCellValue(String value) {
     String thisStr;
+    if(value.trim()=="") {
+      return "";
+    }
     switch (mNextCellType) {
       case BOOL:
         return value.charAt(0) == '0' ? "FALSE" : "TRUE";
