@@ -348,7 +348,7 @@ public class ExcelXlsxReader extends DefaultHandler {
         }
       }
     }
-    if(errorSheet) {
+    if(errorSheet || mExcelRowObjectData.size() !=headTitleList.size()) {
       return;
     }
     if (mCurrentRowIndex >= mBeginReadRowIndex) {
