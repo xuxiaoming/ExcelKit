@@ -295,34 +295,38 @@ public class ExcelXlsxReader extends DefaultHandler {
     if(value.trim()=="") {
       return "";
     }
-    switch (mNextCellType) {
-      case BOOL:
-        return value.charAt(0) == '0' ? "FALSE" : "TRUE";
-      case ERROR:
-        return "\"ERROR:" + value + '"';
-      case FORMULA:
-        return '"' + value + '"';
-      case INLINESTR:
-        return new XSSFRichTextString(value).toString();
-      case STRING:
-        return String.valueOf(value);
-      case NUMBER:
-        if (mFormatString != null) {
-          thisStr = formatter.formatRawCellContents(Double.parseDouble(value), mFormatIndex, mFormatString).trim();
-        } else {
-          thisStr = value;
-        }
+    try {
+      switch (mNextCellType) {
+        case BOOL:
+          return value.charAt(0) == '0' ? "FALSE" : "TRUE";
+        case ERROR:
+          return "\"ERROR:" + value + '"';
+        case FORMULA:
+          return '"' + value + '"';
+        case INLINESTR:
+          return new XSSFRichTextString(value).toString();
+        case STRING:
+          return String.valueOf(value);
+        case NUMBER:
+          if (mFormatString != null) {
+            thisStr = formatter.formatRawCellContents(Double.parseDouble(value), mFormatIndex, mFormatString).trim();
+          } else {
+            thisStr = value;
+          }
 
-        thisStr = thisStr.replace("_", "").trim();
-        break;
-      case DATE:
-        thisStr = formatter.formatRawCellContents(Double.parseDouble(value), mFormatIndex, mFormatString);
-        // 对日期字符串作特殊处理
-        thisStr = thisStr.replace(" ", "T");
-        break;
-      default:
-        thisStr = "";
-        break;
+          thisStr = thisStr.replace("_", "").trim();
+          break;
+        case DATE:
+          thisStr = formatter.formatRawCellContents(Double.parseDouble(value), mFormatIndex, mFormatString);
+          // 对日期字符串作特殊处理
+          thisStr = thisStr.replace(" ", "T");
+          break;
+        default:
+          thisStr = "";
+          break;
+      }
+    }catch (Exception e ){
+      thisStr = value;
     }
     return thisStr;
   }
