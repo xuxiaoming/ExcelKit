@@ -222,7 +222,7 @@ public class ExcelXlsxReader extends DefaultHandler {
         mMaxCellRef = mCurrentCellRef;
       }
       // 空值补齐(后)
-      if (null != mMaxCellRef) {
+      if (null != mMaxCellRef && null != mCurrentCellRef) {
         for (int i = 0; i <= POIUtil.countNullCell(mMaxCellRef, mCurrentCellRef); i++) {
           mExcelRowObjectData.add(mCurrentCellIndex, mEmptyCellValue);
           mCurrentCellIndex++;
