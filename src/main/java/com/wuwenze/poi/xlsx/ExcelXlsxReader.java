@@ -176,7 +176,7 @@ public class ExcelXlsxReader extends DefaultHandler {
     if (Const.SAX_C_ELEMENT.equals(name)) {
       String ref = attributes.getValue(Const.SAX_R_ATTR);
       // 前一个单元格的位置
-      mPreviousCellRef = null == mPreviousCellRef ? ref : mCurrentCellRef;
+      mPreviousCellRef = null == mPreviousCellRef ? "A"+(mCurrentRowIndex+1) : mCurrentCellRef;
       // 当前单元格的位置
       mCurrentCellRef = ref;
       // Figure out if the value is an index in the SST
@@ -204,11 +204,13 @@ public class ExcelXlsxReader extends DefaultHandler {
     // 处理单元格数据
     if (Const.SAX_C_ELEMENT.equals(name)) {
       String value = this.getCellValue(mPreviousCellValue.trim());
-
       // 空值补齐(中)
       if (!mCurrentCellRef.equals(mPreviousCellRef)) {
-        for (int i = 0; i < POIUtil.countNullCell(mCurrentCellRef, mPreviousCellRef);
-            i++) {
+        int num =POIUtil.countNullCell(mCurrentCellRef, mPreviousCellRef);
+        if(num!=0&&mPreviousCellRef.startsWith("A")) {
+          num++;
+        }
+        for (int i = 0; i < num; i++) {
           mExcelRowObjectData.add(mCurrentCellIndex, mEmptyCellValue);
           mCurrentCellIndex++;
         }
