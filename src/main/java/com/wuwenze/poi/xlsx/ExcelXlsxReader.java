@@ -207,8 +207,8 @@ public class ExcelXlsxReader extends DefaultHandler {
       // 空值补齐(中)
       if (!mCurrentCellRef.equals(mPreviousCellRef)) {
         int num =POIUtil.countNullCell(mCurrentCellRef, mPreviousCellRef);
-        if(num!=0&&mPreviousCellRef.startsWith("A")) {
-          num++;
+        if(mPreviousCellRef.startsWith("A")&&mExcelRowObjectData.size()==0) {
+             num++;
         }
         for (int i = 0; i < num; i++) {
           mExcelRowObjectData.add(mCurrentCellIndex, mEmptyCellValue);
