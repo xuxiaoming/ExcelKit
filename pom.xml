@@ -6,7 +6,7 @@
 
   <groupId>com.aegean</groupId>
   <artifactId>ExcelKit</artifactId>
-  <version>1.0.1-SNAPSHOT</version>
+  <version>1.0.2-SNAPSHOT</version>
   <packaging>jar</packaging>
   <name>ExcelKit</name>
   <url>http://gitee.com/wuwenze/ExcelKit</url>
